@@ -17,22 +17,40 @@ Template Google Apps Script untuk administrasi ujian sekolah:
 
 File data sekolah, konfigurasi deployment, dan aset lokal sengaja tidak disertakan dalam repository ini.
 
-## Menambahkan logo sekolah
+## Mengganti logo sekolah
 
-Logo disimpan pada sheet tersembunyi `ASSET`, sel `A2`.
+Logo utama aplikasi berada di file `Logo.gs`, pada baris:
 
-1. Jalankan `setupAwal()` satu kali jika sheet `ASSET` belum ada.
-2. Di Google Sheets, buka **View → Hidden sheets → ASSET**.
-3. Siapkan logo PNG dengan ukuran file kecil, lalu ubah menjadi Base64. Di Windows PowerShell:
+```javascript
+const LOGO_SEKOLAH_BASE64 = '...';
+```
+
+Logo bawaan ini sengaja tetap menjadi sumber utama agar logo aplikasi tidak berubah hanya karena isi sheet `ASSET` berbeda. Sheet `ASSET!A2` hanya menjadi cadangan.
+
+### Cara mengubah gambar menjadi Base64 di Windows
+
+1. Siapkan gambar logo dalam format **PNG**. JPG juga bisa, tetapi PNG lebih baik untuk logo karena latar transparan tetap terjaga.
+2. Letakkan file, misalnya `logo.png`, di Desktop.
+3. Buka **PowerShell**: tekan tombol Windows, ketik `PowerShell`, lalu buka aplikasinya.
+4. Jalankan perintah ini. Ganti bagian path jika lokasi file berbeda:
 
    ```powershell
-   [Convert]::ToBase64String([IO.File]::ReadAllBytes("logo.png")) | Set-Clipboard
+   [Convert]::ToBase64String([IO.File]::ReadAllBytes("$env:USERPROFILE\Desktop\logo.png")) | Set-Clipboard
    ```
 
-4. Tempel hasil Base64 ke `ASSET!A2`. Jangan menambahkan awalan `data:image/png;base64,`.
-5. Biarkan `ASSET!A1` tetap bernilai `logo_base64`, lalu sembunyikan kembali sheet tersebut.
+   Perintah tersebut membaca file `logo.png`, mengubahnya menjadi teks Base64, lalu menyalin teks itu ke Clipboard. Tidak mengirim file ke internet.
 
-Ukuran Base64 dibatasi sekitar 50.000 karakter. Logo pada `ASSET!A2` menjadi prioritas; `Logo.gs` hanya menjadi logo cadangan jika sel tersebut kosong.
+5. Buka `Logo.gs` di project Apps Script.
+6. Pada `const LOGO_SEKOLAH_BASE64`, hapus **hanya teks panjang di antara tanda kutip**, lalu tekan `Ctrl+V` untuk menempel Base64 baru. Jangan menghapus `const`, nama variabel, tanda kutip, atau titik koma.
+7. Simpan, push, dan deploy versi baru Apps Script.
+
+### Batas ukuran logo
+
+- **Maksimal:** sekitar **37 KB ukuran file asli**, agar hasil Base64 tetap di bawah batas sekitar **50.000 karakter**.
+- **Minimal:** tidak ada batas teknis, tetapi gunakan minimal sekitar **300×300 piksel** agar logo tidak pecah saat dicetak.
+- Rekomendasi praktis: PNG transparan, lebar/tinggi **500–1200 piksel**, ukuran file **10–30 KB**.
+
+Jika hasil terlalu besar, kecilkan dimensi atau kompres gambar terlebih dahulu. Jangan menambahkan awalan `data:image/png;base64,` ke nilai Base64.
 
 ## Pengujian lokal
 

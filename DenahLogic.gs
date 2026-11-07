@@ -114,14 +114,14 @@ function getDataDenah() {
 }
 
 function _logoDataUri() {
+  if (typeof LOGO_SEKOLAH_BASE64 === 'string' && LOGO_SEKOLAH_BASE64) return 'data:image/png;base64,' + LOGO_SEKOLAH_BASE64;
   const sheet = SpreadsheetApp.getActive().getSheetByName('ASSET');
   const value = sheet ? sheet.getRange('A2').getDisplayValue().trim() : '';
-  const base64 = value || (typeof LOGO_SEKOLAH_BASE64 === 'string' ? LOGO_SEKOLAH_BASE64 : '');
-  if (!base64) return '';
-  if (base64.length > 50000 || !/^[A-Za-z0-9+/]+={0,2}$/.test(base64)) {
+  if (!value) return '';
+  if (value.length > 50000 || !/^[A-Za-z0-9+/]+={0,2}$/.test(value)) {
     throw new Error('Logo di ASSET bukan base64 PNG yang valid atau melebihi batas 50.000 karakter.');
   }
-  return 'data:image/png;base64,' + base64;
+  return 'data:image/png;base64,' + value;
 }
 
 function _signatureDataUri(value) {
