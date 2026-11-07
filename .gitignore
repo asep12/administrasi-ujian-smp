@@ -1,0 +1,24 @@
+# Data pribadi dan file kerja lokal
+*.xlsx
+*.xls
+*.docx
+*.pdf
+*.zip
+~$*
+nul
+
+# Identitas/deployment lokal Apps Script
+.clasp.json
+.clasp.json.*
+
+# Aset lokal dan referensi desain
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.svg
+Aplikasi Administrasi Ujian - UI/
+
+# File sementara
+test-output/
+.DS_Store

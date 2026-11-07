@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <style>
+    :root{font-family:Inter,Arial,sans-serif;color:#202124;background:#fff;font-size:14px}
+    *{box-sizing:border-box}body{margin:0}.top{height:58px;background:#f8f9fb;border-bottom:1px solid #e0e3e7;display:flex;align-items:center;padding:0 28px;font-size:16px;font-weight:600}
+    main{padding:24px 28px}.steps{display:flex;gap:8px;margin-bottom:26px}.step{padding:7px 13px;border-radius:18px;background:#f1f3f4;color:#5f6368}.step.active{background:#1a56c4;color:#fff}
+    h1{font-size:21px;margin:0 0 8px}p{line-height:1.5;color:#5f6368;margin:0 0 18px}.notice{padding:15px 17px;border-radius:9px;background:#eef3fd;border:1px solid #9bb7ea;margin-bottom:16px;line-height:1.55}
+    .mode-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:16px 0 22px}.mode-option{position:relative;cursor:pointer}.mode-option input{position:absolute;opacity:0}.mode-option span{display:block;min-height:72px;padding:13px;border:1px solid #e0e3e7;border-radius:9px;background:white}.mode-option input:checked+span{border:2px solid #1a56c4;background:#eef3fd;padding:12px}.mode-option input:focus-visible+span{outline:3px solid #8ab4f8;outline-offset:2px}.mode-option strong,.mode-option small{display:block}.mode-option small{margin-top:5px;color:#5f6368;line-height:1.35}
+    .fields{display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:18px}.field{display:grid;gap:6px;font-weight:600}.field input{height:42px;padding:0 11px;border:1px solid #c4c7cc;border-radius:6px;font:inherit}.actions{display:flex;justify-content:flex-end;gap:10px}button{min-height:42px;padding:0 16px;border:0;border-radius:6px;background:#1a56c4;color:#fff;font:inherit;font-weight:600;cursor:pointer}button.secondary{border:1px solid #c4c7cc;background:white;color:#202124}button:disabled{opacity:.6;cursor:wait}
+    #result{margin-top:18px;max-height:300px;overflow:auto}.summary{padding:12px;background:#f8f9fb;border-radius:7px;margin-bottom:10px}.error{background:#fef7e0;padding:12px;border-radius:7px;margin:8px 0}.fix{color:#137333}ul{padding-left:22px}small{color:#5f6368}[hidden]{display:none!important}
+    @media(max-width:640px){main{padding:18px 14px}.mode-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.fields{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <header class="top">Administrasi Ujian</header>
+  <main>
+    <nav id="stepper" class="steps" aria-label="Tahapan aplikasi">
+      <span class="step active">Mulai</span><span class="step">Input Siswa</span><span class="step">Bagi Ruang</span><span class="step">Pola Kursi</span><span class="step">Cetak</span>
+    </nav>
+    <section id="startScreen">
+      <h1>Mulai administrasi ujian</h1>
+      <p>Pilih tingkat yang mengikuti ujian ini, lalu periksa nama ujian dan tahun pelajaran.</p>
+      <div class="mode-grid" role="radiogroup" aria-label="Tingkat ujian">
+        <label class="mode-option"><input type="radio" name="examMode" value="7-8"><span><strong>Tingkat 7 &amp; 8</strong><small>Campuran dua tingkat</small></span></label>
+        <label class="mode-option"><input type="radio" name="examMode" value="8-9"><span><strong>Tingkat 8 &amp; 9</strong><small>Campuran dua tingkat</small></span></label>
+        <label class="mode-option"><input type="radio" name="examMode" value="7-9"><span><strong>Tingkat 7 &amp; 9</strong><small>Campuran dua tingkat</small></span></label>
+        <label class="mode-option"><input type="radio" name="examMode" value="7-8-9"><span><strong>Tingkat 7, 8 &amp; 9</strong><small>Pasangan ruang antar tiga tingkat</small></span></label>
+        <label class="mode-option"><input type="radio" name="examMode" value="7"><span><strong>Tingkat 7 saja</strong><small>Satu tingkat</small></span></label>
+        <label class="mode-option"><input type="radio" name="examMode" value="8"><span><strong>Tingkat 8 saja</strong><small>Satu tingkat</small></span></label>
+        <label class="mode-option"><input type="radio" name="examMode" value="9"><span><strong>Tingkat 9 saja</strong><small>Satu tingkat</small></span></label>
+      </div>
+      <div class="fields">
+        <label class="field">Nama ujian<input id="examName" type="text" autocomplete="off"></label>
+        <label class="field">Tahun pelajaran<input id="schoolYear" type="text" placeholder="2025/2026" autocomplete="off"></label>
+      </div>
+      <div id="startMessage" aria-live="polite"></div>
+      <div class="actions"><button id="continue" onclick="continueToInput()" disabled>Lanjut ke Input Siswa</button></div>
+    </section>
+    <section id="inputScreen" hidden>
+      <h1>Validasi dan rapikan data siswa</h1>
+      <p>Tempel data di sheet <b>SISWA</b> pada kolom induk, nama, lp, kelas. Gunakan Paste values only agar nomor induk tidak berubah.</p>
+      <div class="notice">Aplikasi akan merapikan spasi, format kelas dan L/P, serta mengisi tingkat. Baris bermasalah ditandai kuning. Nomor induk 9 digit tidak akan ditebak atau ditambah nol otomatis.</div>
+      <div class="actions"><button class="secondary" onclick="backToStart()">Kembali</button><button id="run" onclick="validateData()">Validasi &amp; Rapikan Data</button></div>
+      <section id="result" aria-live="polite"></section>
+    </section>
+  </main>
+  <script>
+    function setStep(index){document.querySelectorAll('#stepper .step').forEach((step,i)=>step.classList.toggle('active',i===index))}
+    function loadStart(){
+      google.script.run.withSuccessHandler(data=>{
+        const radio=document.querySelector('input[name="examMode"][value="'+data.mode+'"]');if(radio)radio.checked=true;
+        document.getElementById('examName').value=data.namaUjian;document.getElementById('schoolYear').value=data.tahunPelajaran;
+        document.getElementById('continue').disabled=false;
+      }).withFailureHandler(error=>{const message=document.getElementById('startMessage');message.className='error';message.textContent=error.message||String(error)}).getDataMulai();
+    }
+    function continueToInput(){
+      const mode=document.querySelector('input[name="examMode"]:checked');const namaUjian=document.getElementById('examName').value.trim();const tahunPelajaran=document.getElementById('schoolYear').value.trim();const button=document.getElementById('continue');
+      const message=document.getElementById('startMessage');if(!mode||!namaUjian||!tahunPelajaran){message.className='error';message.textContent='Pilih tingkat ujian dan lengkapi nama serta tahun pelajaran.';return}
+      button.disabled=true;message.className='';message.textContent='Menyimpan pilihan…';
+      google.script.run.withSuccessHandler(()=>{message.className='';message.textContent='';document.getElementById('startScreen').hidden=true;document.getElementById('inputScreen').hidden=false;document.getElementById('result').textContent='';setStep(1)}).withFailureHandler(error=>{message.className='error';message.textContent=error.message||String(error);button.disabled=false}).simpanMulai({mode:mode.value,namaUjian,tahunPelajaran});
+    }
+    function backToStart(){document.getElementById('continue').disabled=false;document.getElementById('startMessage').textContent='';document.getElementById('inputScreen').hidden=true;document.getElementById('startScreen').hidden=false;setStep(0)}
+    function validateData(){
+      const button=document.getElementById('run'),result=document.getElementById('result');
+      button.disabled=true;button.textContent='Memeriksa…';result.textContent='';
+      google.script.run.withSuccessHandler(showResult).withFailureHandler(error=>{
+        const box=document.createElement('div');box.className='error';box.textContent=error.message||String(error);result.appendChild(box);finish();
+      }).validasiDanRapikanSiswa();
+      function finish(){button.disabled=false;button.textContent='Validasi & Rapikan Data';}
+      function showResult(data){
+        const summary=document.createElement('div');summary.className='summary';
+        summary.textContent='Siswa: '+data.total+' · Tingkat: '+Object.keys(data.counts).sort().map(key=>key+' ('+data.counts[key]+')').join(', ')+' · Rombel: '+Object.keys(data.byClass).sort().map(key=>key+' ('+data.byClass[key]+')').join(', ');
+        result.appendChild(summary);
+        if(data.fixes.length){const title=document.createElement('b');title.textContent='Perbaikan otomatis ('+data.fixes.length+')';result.appendChild(title);const list=document.createElement('ul');data.fixes.forEach(fix=>{const li=document.createElement('li');li.className='fix';li.textContent='Baris '+fix.row+' · '+fix.field+': “'+fix.before+'” → “'+fix.after+'”';list.appendChild(li)});result.appendChild(list)}
+        if(data.issues.length){const title=document.createElement('b');title.textContent='Perlu diperbaiki ('+data.issues.length+' baris)';result.appendChild(title);data.issues.forEach(issue=>{const box=document.createElement('div');box.className='error';box.textContent='Baris '+issue.row+': '+issue.messages.join(' ');result.appendChild(box)})}
+        if(data.valid){const ok=document.createElement('p');ok.textContent='Data valid dan siap dibagi ke ruang.';result.appendChild(ok);const next=document.createElement('button');next.textContent='Lanjut ke Pembagian Ruang';next.onclick=()=>google.script.run.withFailureHandler(error=>{ok.textContent=error.message||String(error)}).bukaPembagianRuang();result.appendChild(next)}
+        finish();
+      }
+    }
+    loadStart();
+  </script>
+</body>
+</html>

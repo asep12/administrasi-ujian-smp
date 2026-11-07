@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <style>
+    :root{font-family:Inter,Arial,sans-serif;color:#202124;background:#fff;font-size:14px}
+    *{box-sizing:border-box}body{margin:0}.top{height:58px;background:#f8f9fb;border-bottom:1px solid #e0e3e7;display:flex;align-items:center;padding:0 28px;font-size:16px;font-weight:600}
+    main{padding:22px 28px}.steps{display:flex;gap:8px;margin-bottom:22px;overflow:auto}.step{white-space:nowrap;padding:7px 13px;border-radius:18px;background:#f1f3f4;color:#5f6368}.step.active{background:#1a56c4;color:#fff}
+    h1{font-size:21px;margin:0 0 7px}p{line-height:1.5;color:#5f6368;margin:0 0 16px}.toolbar{display:flex;align-items:center;gap:12px;margin:18px 0}.toolbar label{font-weight:600}.toolbar select,.room-count,.allocation{min-height:40px;border:1px solid #c4c7cc;border-radius:6px;background:#fff;padding:7px 10px;font:inherit}
+    .notice{padding:12px 15px;border-radius:8px;background:#eef3fd;border:1px solid #9bb7ea;line-height:1.5}.levels{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin:16px 0}.tier{border:1px solid #e0e3e7;border-radius:9px;padding:15px}.tier-head{display:flex;justify-content:space-between;align-items:center;gap:12px}.tier h2{font-size:16px;margin:0}.count{color:#5f6368;margin-top:4px}.room-count{width:76px}.distribution{display:grid;grid-template-columns:repeat(4,minmax(58px,1fr));gap:8px;margin-top:13px}.allocation-wrap{display:grid;gap:4px;font-size:12px;color:#5f6368}.allocation{width:100%;text-align:center}.mini{padding:0 11px;min-height:38px;border:1px solid #c4c7cc;border-radius:6px;background:white;color:#1a56c4;font:inherit;cursor:pointer}
+    .status{margin:14px 0;padding:11px 13px;border-radius:7px;background:#f8f9fb}.status.good{color:#137333;background:#eaf4ea}.status.bad{color:#b3261e;background:#fce8e6}.bar{height:6px;border-radius:4px;background:#e0e3e7;margin-top:8px;overflow:hidden}.bar span{display:block;height:100%;width:0;background:#137333}.bar.bad span{background:#b3261e}.room-preview{width:100%;border-collapse:collapse;margin-top:14px}.room-preview th,.room-preview td{padding:9px 8px;border-bottom:1px solid #e0e3e7;text-align:left}.room-preview th{color:#5f6368;font-size:12px}.badge{padding:4px 8px;border-radius:13px;background:#eef3fd;color:#1a56c4;white-space:nowrap}.badge.single{background:#fef7e0;color:#795900}
+    .actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}button.primary{min-height:44px;padding:0 17px;border:0;border-radius:6px;background:#1a56c4;color:#fff;font:inherit;font-weight:600;cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}#message{margin-top:12px;line-height:1.5}#message.error{padding:11px;background:#fef7e0;border-radius:7px;color:#614b00}#message.success{color:#137333}
+    @media(max-width:560px){main{padding:18px 14px}.top{padding:0 14px}.steps{gap:5px}.step{padding:7px 9px}.distribution{grid-template-columns:repeat(3,minmax(58px,1fr))}.room-preview th,.room-preview td{padding:7px 4px;font-size:12px}}
+  </style>
+</head>
+<body>
+  <header class="top">Administrasi Ujian · Atur Pembagian Ruang</header>
+  <main>
+    <nav class="steps" aria-label="Tahapan aplikasi"><span class="step">Mulai</span><span class="step">Input Siswa</span><span class="step active">Bagi Ruang</span><span class="step">Pola Kursi</span><span class="step">Cetak</span></nav>
+    <h1>Atur pembagian ruang</h1>
+    <p>Pilih tingkat ujian, tentukan jumlah ruang, lalu sesuaikan isi tiap ruang. Susunan siswa mengikuti urutan di sheet SISWA.</p>
+    <div class="toolbar"><label for="mode">Tingkat ujian</label><select id="mode" onchange="loadMode()"><option value="7-8">7 &amp; 8</option><option value="8-9">8 &amp; 9</option><option value="7-9">7 &amp; 9</option><option value="7-8-9">7, 8 &amp; 9</option><option value="7">Tingkat 7</option><option value="8">Tingkat 8</option><option value="9">Tingkat 9</option></select></div>
+    <div id="capacity-note" class="notice"></div>
+    <div id="levels" class="levels"></div>
+    <div id="checks"></div>
+    <div id="preview"></div>
+    <div id="message" aria-live="polite"></div>
+    <div class="actions"><button id="save" class="primary" disabled onclick="saveRooms()">Simpan Pembagian</button></div>
+  </main>
+  <script>
+    let state=null;
+    const $=id=>document.getElementById(id);
+    function loadMode(){
+      $('save').disabled=true;$('levels').textContent='Memuat jumlah siswa…';$('checks').textContent='';$('preview').textContent='';$('message').textContent='';
+      google.script.run.withSuccessHandler(data=>{
+        if(!data.valid){$('levels').textContent=data.message||'Data siswa belum valid.';if(data.validation){$('message').className='error';$('message').textContent=data.validation.issues.map(x=>'Baris '+x.row+': '+x.messages.join(' ')).join(' | ')}return}
+      state=data;render();
+      }).withFailureHandler(showError).getDataPembagianRuang($('mode').value);
+    }
+    function render(){
+      $('levels').replaceChildren();
+      $('capacity-note').textContent='Ruang gabungan maksimal '+state.sideCapacity+' siswa per tingkat. Ruang tunggal maksimal '+state.singleCapacity+' siswa.';
+      if(state.triple){renderTriple();return}
+      state.levels.forEach(level=>{
+        const card=document.createElement('section');card.className='tier';
+        const head=document.createElement('div');head.className='tier-head';
+        const title=document.createElement('div');const name=document.createElement('h2');name.textContent='Tingkat '+level;const count=document.createElement('div');count.className='count';count.textContent=(state.counts[level]||0)+' siswa';title.append(name,count);
+        const roomCount=document.createElement('input');roomCount.className='room-count';roomCount.type='number';roomCount.min='0';roomCount.step='1';roomCount.value=state.allocations[level].length;roomCount.setAttribute('aria-label','Jumlah ruang tingkat '+level);roomCount.disabled=!state.counts[level];roomCount.onchange=()=>setRoomCount(level,roomCount.value);
+        head.append(title,roomCount);card.append(head);
+        const actions=document.createElement('div');actions.style.marginTop='10px';const auto=document.createElement('button');auto.className='mini';auto.textContent='Bagi rata otomatis';auto.disabled=!state.counts[level];auto.onclick=()=>{state.allocations[level]=distribute(state.counts[level],state.allocations[level].length);render()};actions.append(auto);card.append(actions);
+        const grid=document.createElement('div');grid.className='distribution';
+        state.allocations[level].forEach((quantity,index)=>{
+          const wrap=document.createElement('label');wrap.className='allocation-wrap';wrap.append(document.createTextNode('Ruang '+(index+1)));
+          const input=document.createElement('input');input.type='number';input.min='0';input.step='1';input.value=quantity;input.className='allocation';input.dataset.level=level;input.dataset.room=index;input.setAttribute('aria-label','Jumlah siswa tingkat '+level+' ruang '+(index+1));
+          const cap=roomCapacity(level,index);input.max=cap;input.title='Maksimal '+cap+' siswa';input.oninput=()=>{state.allocations[level][index]=input.value===''?NaN:Number(input.value);updateChecks()};
+          wrap.append(input);grid.append(wrap);
+        });
+        card.append(grid);$('levels').append(card);
+      });
+      updateChecks();
+    }
+    function renderTriple(){
+      const note=document.createElement('div');note.className='notice';note.textContent='Setiap ruang hanya memuat dua tingkat. Tentukan jumlah pasangan ruang di bawah ini.';$('levels').append(note);
+      const groups=document.createElement('div');groups.className='toolbar';[['a','Ruang 7 + 9'],['b','Ruang 8 + 9'],['c','Ruang 7 + 8']].forEach(([key,label])=>{const wrap=document.createElement('label');wrap.textContent=label+' ';const input=document.createElement('input');input.type='number';input.min='0';input.step='1';input.value=state.tripleGroups[key];input.style.width='70px';input.onchange=()=>changeTripleGroups(key,input.value);wrap.append(input);groups.append(wrap)});[['7','Ruang tunggal tingkat 7'],['8','Ruang tunggal tingkat 8'],['9','Ruang tunggal tingkat 9']].forEach(([level,label])=>{const wrap=document.createElement('label');wrap.textContent=label+' ';const input=document.createElement('input');input.type='number';input.min='0';input.step='1';input.value=state.tripleSingles[level]||0;input.style.width='70px';input.onchange=()=>changeTripleGroups('single'+level,input.value);wrap.append(input);groups.append(wrap)});$('levels').append(groups);
+      const table=document.createElement('table');table.className='room-preview';table.innerHTML='<thead><tr><th>Ruang</th><th>Tingkat kiri</th><th>Jumlah kiri</th><th>Tingkat kanan</th><th>Jumlah kanan</th></tr></thead>';
+      const body=document.createElement('tbody');state.roomPlans.forEach((plan,index)=>{const tr=document.createElement('tr');const no=document.createElement('td');no.textContent=String(index+1).padStart(3,'0');tr.append(no);['leftLevel','leftCount','rightLevel','rightCount'].forEach(key=>{const td=document.createElement('td');let input=document.createElement('select');if(key.endsWith('Level')){const blank=document.createElement('option');blank.value='';blank.textContent='Ruang tunggal';input.append(blank);state.levels.forEach(level=>{const option=document.createElement('option');option.value=level;option.textContent='Tingkat '+level;input.append(option)});input.value=plan[key]}else{input=document.createElement('input');input.type='number';input.min='0';input.max=state.singleCapacity;input.value=plan[key]}input.onchange=()=>{plan[key]=key.endsWith('Level')?input.value:Number(input.value);if(key==='rightLevel'&&input.value==='')plan.rightCount=0;updateTripleChecks()};td.append(input);tr.append(td)});body.append(tr)});table.append(body);$('levels').append(table);updateTripleChecks();
+    }
+    function changeTripleGroups(key,value){
+      const amount=Number(value);if(!Number.isSafeInteger(amount)||amount<0){render();return}if(key.startsWith('single'))state.tripleSingles[key.slice(-1)]=amount;else state.tripleGroups[key]=amount;const definitions=[['7','9',state.tripleGroups.a],['8','9',state.tripleGroups.b],['7','8',state.tripleGroups.c]],plans=[];definitions.forEach(([left,right,total])=>{for(let i=0;i<total;i++)plans.push({leftLevel:left,rightLevel:right,leftCount:0,rightCount:0})});['7','8','9'].forEach(level=>{for(let i=0;i<(state.tripleSingles[level]||0);i++)plans.push({leftLevel:level,rightLevel:'',leftCount:0,rightCount:0});const eligible=plans.filter(plan=>plan.leftLevel===level||plan.rightLevel===level);const amounts=distribute(state.counts[level]||0,eligible.length);eligible.forEach((plan,index)=>{if(plan.leftLevel===level)plan.leftCount=amounts[index];else plan.rightCount=amounts[index]})});state.roomPlans=plans;render();
+    }
+    function updateTripleChecks(){
+      $('checks').replaceChildren();const totals={'7':0,'8':0,'9':0};let valid=true;const rowErrors=[];state.roomPlans.forEach((plan,index)=>{if(!plan.leftLevel||plan.leftLevel===plan.rightLevel)rowErrors.push('Ruang '+(index+1)+': pilih dua tingkat berbeda atau pilih Ruang tunggal.');const single=!plan.rightLevel;const left=Number(plan.leftCount),right=Number(plan.rightCount);if(![left,right].every(value=>Number.isSafeInteger(value)&&value>=0)||(!single&&left+right>state.singleCapacity)||(single&&right!==0)||single&&left>state.singleCapacity)rowErrors.push('Ruang '+(index+1)+': jumlah siswa melebihi kapasitas '+state.singleCapacity+'.');if(!Number.isSafeInteger(left)||left<0)valid=false;else totals[plan.leftLevel]=(totals[plan.leftLevel]||0)+left;if(plan.rightLevel){if(!Number.isSafeInteger(right)||right<0)valid=false;else totals[plan.rightLevel]=(totals[plan.rightLevel]||0)+right}});if(rowErrors.length){valid=false;rowErrors.forEach(text=>{const box=document.createElement('div');box.className='status bad';box.textContent=text;$('checks').append(box)})}state.levels.forEach(level=>{const ok=totals[level]===(state.counts[level]||0);valid=valid&&ok;const box=document.createElement('div');box.className='status '+(ok?'good':'bad');box.textContent='Tingkat '+level+': '+totals[level]+' / '+(state.counts[level]||0)+' siswa';$('checks').append(box)});$('save').disabled=!valid;renderTriplePreview()}
+    function renderTriplePreview(){const table=document.createElement('table');table.className='room-preview';table.innerHTML='<thead><tr><th>Ruang</th><th>Sisi kiri</th><th>Sisi kanan</th><th>Jenis</th></tr></thead>';const body=document.createElement('tbody');state.roomPlans.forEach((plan,index)=>{const tr=document.createElement('tr');[String(index+1).padStart(3,'0'),'Tingkat '+plan.leftLevel+' · '+plan.leftCount+' siswa','Tingkat '+plan.rightLevel+' · '+plan.rightCount+' siswa','Gabungan'].forEach(text=>{const td=document.createElement('td');td.textContent=text;tr.append(td)});body.append(tr)});table.append(body);$('preview').replaceChildren(table)}
+    function setRoomCount(level,value){
+      const n=Number(value);if(!Number.isSafeInteger(n)||n<0){showError({message:'Jumlah ruang harus bilangan bulat nol atau lebih.'});render();return}
+      state.allocations[level]=state.counts[level]?distribute(state.counts[level],n):[];render();
+    }
+    function distribute(total,rooms){if(!rooms)return[];const base=Math.floor(total/rooms),remainder=total%rooms;return Array.from({length:rooms},(_,i)=>base+(i<remainder?1:0))}
+    function roomCapacity(level,index){
+      const active=state.levels.filter(item=>state.counts[item]>0);
+       return state.singleCapacity;
+    }
+    function updateChecks(){
+      if(state.triple){updateTripleChecks();return}
+      const checks=$('checks');checks.replaceChildren();let valid=true;
+      state.levels.forEach(level=>{
+        const list=state.allocations[level],sum=list.reduce((total,value)=>total+(Number.isFinite(value)?value:0),0),complete=sum===(state.counts[level]||0)&&list.every(Number.isSafeInteger);
+        const capacityOk=list.every((value,index)=>Number.isSafeInteger(value)&&value>=0&&value<=roomCapacity(level,index));
+        const ok=complete&&capacityOk;valid=valid&&ok;
+        const box=document.createElement('div');box.className='status '+(ok?'good':'bad');box.textContent='Tingkat '+level+': '+sum+' / '+(state.counts[level]||0)+' siswa'+(capacityOk?'':' · ada ruang melebihi kapasitas');
+        const bar=document.createElement('div');bar.className='bar'+(ok?'':' bad');const fill=document.createElement('span');fill.style.width=(state.counts[level]?Math.min(100,sum/state.counts[level]*100):100)+'%';bar.append(fill);box.append(bar);checks.append(box);
+      });
+      const active=state.levels.filter(level=>state.counts[level]>0),common=active.length===2?Math.min(...active.map(level=>state.allocations[level].length)):0;
+      for(let index=0;index<common;index++)if(state.allocations[active[0]][index]+state.allocations[active[1]][index]>state.singleCapacity){valid=false;const box=document.createElement('div');box.className='status bad';box.textContent='Ruang '+(index+1)+' melebihi kapasitas '+state.singleCapacity+' siswa.';$('checks').append(box)}
+      renderPreview();$('save').disabled=!valid;
+    }
+    function renderPreview(){
+      const levels=state.levels,left=state.allocations[levels[0]],right=levels[1]?state.allocations[levels[1]]:[],rooms=Math.max(left.length,right.length);const table=document.createElement('table');table.className='room-preview';
+      const head=document.createElement('thead');head.innerHTML='<tr><th>Ruang</th><th>Sisi kiri</th><th>Sisi kanan</th><th>Jenis</th></tr>';table.append(head);
+      const body=document.createElement('tbody');for(let i=0;i<rooms;i++){
+        const leftExists=i<left.length,rightExists=i<right.length,single=!(leftExists&&rightExists),tr=document.createElement('tr');
+        [String(i+1).padStart(3,'0'),leftExists?'Tingkat '+levels[0]+' · '+left[i]+' siswa':'—',rightExists?'Tingkat '+levels[1]+' · '+right[i]+' siswa':'—'].forEach(text=>{const td=document.createElement('td');td.textContent=text;tr.append(td)});
+        const type=document.createElement('td');const badge=document.createElement('span');badge.className='badge'+(single?' single':'');badge.textContent=single?'Ruang tunggal':'Gabungan';type.append(badge);tr.append(type);body.append(tr);
+      }table.append(body);$('preview').replaceChildren(table);
+    }
+    function saveRooms(confirmOverwrite){
+      $('save').disabled=true;$('message').className='';$('message').textContent='Menyimpan…';
+      google.script.run.withSuccessHandler(result=>{
+        if(result.needsConfirmation){
+          const confirmed=window.confirm('Pembagian lama akan diganti dan penempatan siswa tingkat lain akan dikosongkan. Nama pengawas pada nomor ruang yang tetap dipakai akan dipertahankan. Lanjutkan?');
+          if(confirmed)saveRooms(true);else{$('message').textContent='Penyimpanan dibatalkan.';updateChecks()}return;
+        }
+        $('message').className='success';$('message').textContent='Pembagian berhasil disimpan ke SISWA dan RUANG ('+result.roomCount+' ruang).';const next=document.createElement('button');next.className='mini';next.textContent='Lanjut ke Pola Kursi';next.onclick=()=>google.script.run.withFailureHandler(showError).bukaPolaKursi();$('message').append(' ',next);updateChecks();
+      }).withFailureHandler(error=>{showError(error);updateChecks()}).simpanPembagianRuang({mode:$('mode').value,allocations:state.allocations,roomPlans:state.roomPlans,confirmOverwrite:!!confirmOverwrite});
+    }
+    function showError(error){$('message').className='error';$('message').textContent=error.message||String(error)}
+    google.script.run.withSuccessHandler(config=>{$('mode').value=config.mode;loadMode()}).withFailureHandler(showError).getDataMulai();
+  </script>
+</body>
+</html>

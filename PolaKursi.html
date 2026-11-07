@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <style>
+    :root{font-family:Inter,Arial,sans-serif;color:#202124;background:#fff;font-size:14px}*{box-sizing:border-box}body{margin:0}
+    .top{height:58px;background:#f8f9fb;border-bottom:1px solid #e0e3e7;display:flex;align-items:center;padding:0 24px;font-size:16px;font-weight:600}main{padding:20px 24px}
+    .steps{display:flex;gap:7px;margin-bottom:20px;overflow:auto}.step{white-space:nowrap;padding:7px 12px;border-radius:18px;background:#f1f3f4;color:#5f6368}.step.active{background:#1a56c4;color:white}
+    h1{font-size:21px;margin:0 0 6px}p{line-height:1.5;color:#5f6368;margin:0 0 14px}.settings{display:flex;gap:16px;align-items:end;flex-wrap:wrap;margin:16px 0}.field{display:grid;gap:6px;font-weight:600}.field select{height:40px;min-width:150px;padding:0 10px;border:1px solid #c4c7cc;border-radius:6px;background:white;font:inherit}
+    .patterns{display:grid;grid-template-columns:repeat(4,minmax(130px,1fr));gap:9px;margin:12px 0}.pattern{border:1px solid #dadce0;border-radius:8px;background:white;text-align:left;padding:10px;cursor:pointer;color:#202124;font:inherit}.pattern[aria-pressed="true"]{border:2px solid #1a56c4;background:#eef3fd;padding:9px}.pattern strong{display:block;font-size:13px;margin-bottom:7px}.thumb{display:grid;grid-template-columns:repeat(4,1fr);gap:2px}.thumb span{background:#f1f3f4;border-radius:3px;text-align:center;padding:4px 0;font-size:10px;color:#5f6368}
+    .directions{display:flex;gap:8px;flex-wrap:wrap}.direction{min-height:40px;padding:8px 12px;border:1px solid #c4c7cc;border-radius:6px;background:#fff;font:inherit;cursor:pointer}.direction[aria-pressed="true"]{border-color:#1a56c4;color:#1a56c4;background:#eef3fd}
+    .notice{padding:11px 14px;border:1px solid #9bb7ea;background:#eef3fd;border-radius:8px;line-height:1.5;margin:14px 0}.issue{padding:10px 13px;border-radius:7px;background:#fef7e0;color:#614b00;margin:8px 0}.good{color:#137333}.preview-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:18px 0 10px}.preview-head h2{font-size:16px;margin:0}.room-select{height:38px;padding:0 9px;border:1px solid #c4c7cc;border-radius:6px;background:#fff;font:inherit}
+    .room-card{border:1px solid #e0e3e7;border-radius:9px;padding:14px;background:#fff}.room-title{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e0e3e7;padding-bottom:10px;margin-bottom:11px}.room-title h3{margin:0;font-size:16px}.room-title span{color:#5f6368}.preview-brand{display:flex;align-items:center;gap:9px}.school-logo{width:38px;height:38px;object-fit:contain}.print-brand{display:flex;align-items:center;gap:5mm}.print-logo{width:18mm;height:18mm;object-fit:contain}.front-row,.print-front-row{display:flex;align-items:center;gap:12px;margin:8px 0 12px}.front,.print-front{display:flex;justify-content:center;flex:1;margin:0}.front span,.door,.print-front span,.print-door span{border:1px solid #333;border-radius:3px;padding:7px 14px;font-weight:700;font-size:12px;letter-spacing:.02em}.door-row,.print-door{display:flex;justify-content:flex-end;flex:0 0 auto;margin:0}.seat-panels.single-panel,.print-panels.single-panel{display:block}.seat-panel h4{font-size:12px;color:#5f6368;margin:0 0 6px}.denah{width:100%;table-layout:fixed;border-collapse:separate;border-spacing:4mm 3mm}.denah td{padding:0;vertical-align:top}.meja{display:grid;grid-template-columns:repeat(var(--k),minmax(0,1fr));width:100%}.kursi{box-sizing:border-box;min-width:0;height:36px;border:1px solid #333;padding:4px 5px;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;text-align:center;line-height:1.15;background:#fff}.kursi+.kursi{border-left:0}.kursi b{font-size:12px;color:#1a56c4}.kursi i{font-style:normal;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}.kursi span{font-size:10px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.kursi.kosong{border:1px dashed #bbb;color:#999;justify-content:center}.denah-meta{display:flex;justify-content:space-between;gap:12px;margin:8px 0;font-size:12px}.denah-meta-item{min-width:0;display:block;line-height:1.35}.actions{display:flex;justify-content:flex-end;gap:9px;margin:18px 0}.primary,.secondary{min-height:42px;padding:0 15px;border-radius:6px;font:inherit;font-weight:600;cursor:pointer}.primary{border:0;background:#1a56c4;color:#fff}.secondary{border:1px solid #c4c7cc;background:white;color:#202124}.primary:disabled{opacity:.5;cursor:not-allowed}#message{min-height:22px;margin:8px 0}#message.error{color:#9b1c1c}#message.success{color:#137333}#printArea{display:none}
+    @media(max-width:700px){main{padding:16px 12px}.top{padding:0 12px}.patterns{grid-template-columns:repeat(2,minmax(0,1fr))}.denah-wrap{overflow-x:auto}.denah{min-width:620px}.settings{gap:10px}}
+    @page{size:355.6mm 215.9mm;margin:10mm}
+    @media print{body{margin:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}.top,main{display:none!important}#printArea{display:block!important}.print-page{height:195.9mm;overflow:hidden;font-family:Arial,sans-serif;color:#111}.print-page:not(.last){page-break-after:always;break-after:page}.print-head{display:flex;justify-content:space-between;align-items:center;border-bottom:.3mm solid #333;padding-bottom:4mm}.print-head h1{font-size:15pt;margin:0 0 1mm}.print-school{font-size:10pt;font-weight:700}.print-year{font-size:9pt;margin-top:1mm}.print-room{font-size:17pt;font-weight:700;border:1px solid #333;padding:3mm 5mm}.print-meta{display:flex;justify-content:space-between;gap:5mm;font-size:8pt;margin:3mm 0}.print-meta .denah-meta-item{width:50%;line-height:1.35}.print-front{margin:0}.print-front span{padding:1.5mm 12mm;font-size:8pt}.denah{border-spacing:4mm 3mm}.kursi{height:15mm;padding:.8mm 1mm;border:.3mm solid #333}.kursi b{font-size:10pt}.kursi i{font-size:7.5pt}.print-door{margin:0}.print-door span{padding:1.5mm 8mm;font-size:8pt}.seat-panel h4{font-size:8pt;margin:0 0 1mm}}
+  </style>
+</head>
+<body>
+  <header class="top">Administrasi Ujian · Pola Kursi &amp; Denah</header>
+  <main>
+    <nav class="steps" aria-label="Tahapan aplikasi"><span class="step">Mulai</span><span class="step">Input Siswa</span><span class="step">Bagi Ruang</span><span class="step active">Pola Kursi</span><span class="step">Cetak</span></nav>
+    <h1>Pola nomor kursi dan denah</h1>
+    <p>Pilih pola nomor, arah mulai, dan preset. Pratinjau kursi berubah langsung; pengaturan tersimpan di CONFIG saat disimpan atau dicetak.</p>
+    <div class="settings">
+      <label class="field">Preset denah<select id="preset" onchange="renderAll()"><option value="4x5">4 × 5 meja · 40 kursi</option><option value="6x6">6 × 6 · 36 kursi</option></select></label>
+      <div class="field">Arah mulai<div class="directions"><button id="left" class="direction" aria-pressed="true" onclick="setDirection('kiri-depan')">Kiri depan</button><button id="right" class="direction" aria-pressed="false" onclick="setDirection('kanan-depan')">Kanan depan</button></div></div>
+      <label class="field">Pratinjau ruang<select id="roomSelect" class="room-select" onchange="renderAll()"></select></label>
+      <label class="field">Ruang yang dicetak<select id="printScope" class="room-select"><option value="all">Semua ruang</option><option value="selected">Ruang yang dipilih</option></select></label>
+    </div>
+    <div id="patterns" class="patterns"></div>
+    <div id="capacityNote" class="notice"></div>
+    <div id="issues"></div>
+    <div class="preview-head"><h2>Pratinjau denah</h2><span id="previewSummary"></span></div>
+    <div id="preview"></div>
+    <div id="message" aria-live="polite"></div>
+    <div class="actions"><button class="secondary" onclick="saveSettings(false)">Simpan pola</button><button id="printButton" class="primary" onclick="saveSettings(true)">Pratinjau &amp; Cetak Denah</button></div>
+  </main>
+  <div id="printArea"></div>
+  <script>
+    const patternNames=['Samping + ular','Samping berurutan','Belakang + ular','Belakang berurutan'];
+    let data=null,pattern=1,direction='kiri-depan',preset='4x5';
+    const $=id=>document.getElementById(id);
+    function load(){
+      $('preview').textContent='Memuat data ruang…';
+      google.script.run.withSuccessHandler(result=>{
+        data=result;if(!result.valid){$('preview').textContent=result.message||'Data denah belum tersedia.';return}
+        pattern=result.config.pattern;direction=result.config.direction;preset=result.config.preset;
+        $('preset').value=preset;renderPatterns();
+        $('roomSelect').replaceChildren(...result.rooms.map(room=>{const option=document.createElement('option');option.value=room.number;option.textContent='Ruang '+String(room.number).padStart(3,'0');return option}));
+        renderAll();
+      }).withFailureHandler(showError).getDataDenah();
+    }
+    function renderPatterns(){
+      const holder=$('patterns');holder.replaceChildren();
+      for(let mode=1;mode<=4;mode++){
+        const button=document.createElement('button');button.className='pattern';button.type='button';button.setAttribute('aria-pressed',String(pattern===mode));button.onclick=()=>{pattern=mode;renderPatterns();renderAll()};
+        const title=document.createElement('strong');title.textContent='Pola '+mode+' · '+patternNames[mode-1];const grid=document.createElement('span');grid.className='thumb';
+        const positions=[];for(let n=1;n<=20;n++){const pos=seatPosition(n,5,4,mode,'kiri-depan');positions[pos.row*4+pos.col]=n}
+        positions.forEach(n=>{const cell=document.createElement('span');cell.textContent=n;grid.append(cell)});button.append(title,grid);holder.append(button);
+      }
+    }
+    function seatPosition(n,rows,columns,mode,from){
+       const i=n-1;if(i<0||i>=rows*columns)return null;let row,col;
+       if(mode<=2){row=Math.floor(i/columns);col=i%columns;if(mode===1&&row%2)col=columns-1-col}
+       else{col=Math.floor(i/rows);row=i%rows;if(mode===3&&col%2)row=rows-1-row}
+       if(from==='kanan-depan')col=columns-1-col;return{row,col};
+     }
+     function gridPosition(n,rows,columns,compact){return seatPosition(n,rows,columns,compact?2:pattern,direction)}
+    function setDirection(value){direction=value;$('left').setAttribute('aria-pressed',String(value==='kiri-depan'));$('right').setAttribute('aria-pressed',String(value==='kanan-depan'));renderAll()}
+    function dimensions(){return preset==='6x6'?{rows:6,tables:3,seats:2,columns:6,singleCapacity:36}:{rows:5,tables:4,seats:2,columns:8,singleCapacity:40}}
+    function renderAll(){
+      if(!data||!data.rooms.length)return;preset=$('preset').value;
+      const d=dimensions();$('capacityNote').textContent='Kapasitas saat ini: '+d.rows+' baris, '+d.tables+' kolom meja, '+d.seats+' kursi per meja · '+d.singleCapacity+' kursi ruang tunggal · '+(d.rows*d.tables)+' kursi per tingkat di ruang gabungan.';
+      const room=data.rooms.find(item=>String(item.number)===$('roomSelect').value)||data.rooms[0];$('previewSummary').textContent=room.students.length+' siswa';
+      $('preview').replaceChildren(buildRoom(room,d,false));
+       const problems=[...data.issues,...(data.capacityIssues||[]),...capacityProblems(d)];$('issues').replaceChildren();
+       problems.forEach(text=>{const item=document.createElement('div');item.className='issue';item.textContent=text;$('issues').append(item)});
+      if(!problems.length){const ok=document.createElement('div');ok.className='good';ok.textContent='Semua ruang berada dalam kapasitas denah.';$('issues').append(ok)}
+      $('printButton').disabled=problems.length>0;
+    }
+       function capacityProblems(d){
+       const messages=[];for(const room of data.rooms){
+         if(room.shared){if(room.students.length>d.singleCapacity||room.students.some(student=>student.order>d.singleCapacity))messages.push('Ruang '+room.number+' memiliki '+room.students.length+' siswa atau urutan melebihi kapasitas '+d.singleCapacity+'.');continue}
+        if(room.combined){for(const side of ['kiri','kanan']){const students=room.students.filter(student=>student.side===side),count=students.length;if(count>d.rows*d.tables||students.some(student=>student.order>d.rows*d.tables))messages.push('Ruang '+room.number+' sisi '+side+' berisi '+count+' siswa atau urutan melebihi kapasitas '+(d.rows*d.tables)+'.')}}
+        else if(room.students.length>d.singleCapacity||room.students.some(student=>student.order>d.singleCapacity))messages.push('Ruang tunggal '+room.number+' berisi '+room.students.length+' siswa atau urutan melebihi kapasitas '+d.singleCapacity+'.');
+       }return messages;
+      }
+    function buildRoom(room,d,print){
+      const card=document.createElement('section');card.className=print?'print-page'+(room.combined?'':' single'):'room-card';
+      const head=document.createElement('div');head.className=print?'print-head':'room-title';
+       if(print){const left=document.createElement('div');left.className='print-brand';if(data.config.logoDataUri){const logo=document.createElement('img');logo.className='print-logo';logo.src=data.config.logoDataUri;logo.alt='Lambang Kota Serang pada kartu ujian';left.append(logo)}const text=document.createElement('div');const h=document.createElement('h1');h.textContent='DENAH TEMPAT DUDUK PESERTA';const exam=document.createElement('div');exam.className='print-school';exam.textContent=data.config.exam;const school=document.createElement('div');school.className='print-school';school.textContent=data.config.school;const year=document.createElement('div');year.className='print-year';year.textContent='Tahun Pelajaran '+data.config.year;text.append(h,exam,school,year);left.append(text);const no=document.createElement('div');no.className='print-room';no.textContent='RUANG '+String(room.number).padStart(3,'0');head.append(left,no)}
+       else{const brand=document.createElement('div');brand.className='preview-brand';if(data.config.logoDataUri){const logo=document.createElement('img');logo.className='school-logo';logo.src=data.config.logoDataUri;logo.alt='Lambang Kota Serang pada kartu ujian';brand.append(logo)}const text=document.createElement('div');const h=document.createElement('h3');h.textContent='DENAH TEMPAT DUDUK PESERTA';const exam=document.createElement('div');exam.textContent=data.config.exam;const school=document.createElement('div');school.textContent=data.config.school;text.append(h,exam,school);brand.append(text);const no=document.createElement('span');no.textContent='RUANG '+String(room.number).padStart(3,'0');head.append(brand,no)}
+      card.append(head);
+       const meta=document.createElement('div');meta.className=print?'print-meta':'denah-meta';
+      const leftGrade=room.leftLevel||room.rightLevel;const rightGrade=room.rightLevel;
+      if(room.combined){meta.append(textBlock('Kiri: Tingkat '+room.leftLevel+' · '+participantRange(room.students.filter(s=>s.side==='kiri'))),textBlock('Kanan: Tingkat '+room.rightLevel+' · '+participantRange(room.students.filter(s=>s.side==='kanan'))))}
+       else meta.append(textBlock('Tingkat '+leftGrade+' · '+participantRange(room.students)));
+      card.append(meta);
+       const frontRow=document.createElement('div');frontRow.className=print?'print-front-row':'front-row';const front=document.createElement('div');front.className=print?'print-front':'front';const frontLabel=document.createElement('span');frontLabel.textContent='PENGAWAS'+(room.supervisor?' · '+room.supervisor:'');front.append(frontLabel);const doorRow=document.createElement('div');doorRow.className=print?'print-door':'door-row';const door=document.createElement('span');door.className='door';door.textContent='PINTU';doorRow.append(door);frontRow.append(front,doorRow);card.append(frontRow);
+       const panels=document.createElement('div');panels.className=print?'print-panels':'seat-panels';panels.classList.add('single-panel');
+        if(room.shared){
+          panels.append(buildCombinedPanel(room,d,print));
+       }else if(room.combined){
+         panels.append(buildCombinedPanel(room,d,print));
+        }else panels.append(buildPanel('Tingkat '+leftGrade,room.students,d.rows,d.tables,d,print));
+         card.append(panels);
+       return card;
+      }
+      function buildCombinedPanel(room,d,print){
+        const panel=document.createElement('div');panel.className='seat-panel'+(print?' print-panel':'');
+        const h=document.createElement('h4');h.textContent='Kiri: Tingkat '+room.leftLevel+' · Kanan: Tingkat '+room.rightLevel;panel.append(h);
+        const left=room.students.filter(student=>student.side==='kiri').sort((a,b)=>a.order-b.order);
+        const right=room.students.filter(student=>student.side==='kanan').sort((a,b)=>a.order-b.order);
+        const rows=Math.max(d.rows,Math.ceil(Math.max(left.length,right.length)/d.tables));
+        const leftMatrix=buildSeatMatrix(left,seatNumberFor(room,left),rows,d.tables,pattern,direction);
+        const rightMatrix=buildSeatMatrix(right,seatNumberFor(room,right),rows,d.tables,pattern,direction);
+        const combined=leftMatrix.map((row,index)=>row.map((seat,column)=>[seat,rightMatrix[index][column]]));
+        panel.append(renderDenahTable(combined,print));return panel;
+      }
+     function buildPanel(title,students,rows,tables,d,print){
+       const panel=document.createElement('div');panel.className='seat-panel'+(print?' print-panel':'');const h=document.createElement('h4');h.textContent=title;panel.append(h);
+       const seatRows=Math.max(rows,Math.ceil(students.length/(tables*d.seats)));const matrix=buildSeatMatrix(students,student=>student.order,seatRows,tables*d.seats,pattern,direction);const groups=matrix.map(row=>Array.from({length:tables},(_,index)=>row.slice(index*d.seats,index*d.seats+d.seats)));
+       panel.append(renderDenahTable(groups,print));return panel;
+     }
+     function seatNumberFor(room,students){const isRight=students[0]&&students[0].side==='kanan';return student=>isRight&&room.shared?student.order-room.leftCount:student.order}
+      function buildSeatMatrix(students,numberFor,rows,columns,mode,from){
+        const matrix=Array.from({length:rows},()=>Array(columns).fill(null));
+        const layoutRows=Math.max(1,Math.ceil(students.length/columns));const slots=[];for(let n=1;n<=layoutRows*columns;n++){const pos=seatPosition(n,layoutRows,columns,mode,from);if(pos)slots.push({pos,n})}slots.sort((a,b)=>a.pos.row-b.pos.row||a.n-b.n);const used=slots.slice(0,students.length);const compactNo=new Map(used.slice().sort((a,b)=>a.n-b.n).map((slot,index)=>[slot,index+1]));
+        students.slice().sort((a,b)=>numberFor(a)-numberFor(b)).forEach((student,index)=>{const slot=used[index];if(slot)matrix[slot.pos.row][slot.pos.col]={student,no:compactNo.get(slot)}});
+        return matrix;
+      }
+     function renderDenahTable(rows,print){
+       const table=document.createElement('table');table.className='denah'+(print?' print-denah':'');const tbody=document.createElement('tbody');
+       rows.forEach(row=>{const tr=document.createElement('tr');row.forEach(seats=>{const td=document.createElement('td');const meja=document.createElement('div');meja.className='meja';meja.style.setProperty('--k',String(seats.length));seats.forEach(seat=>meja.append(renderSeat(seat)));td.append(meja);tr.append(td)});tbody.append(tr)});table.append(tbody);return table;
+     }
+     function renderSeat(seat){
+       const box=document.createElement('div');box.className='kursi';
+       if(!seat){box.classList.add('kosong');box.textContent='-';box.setAttribute('aria-label','Kursi kosong');return box}
+        const no=document.createElement('b');no.textContent=seat.no;const participant=document.createElement('i');participant.textContent=seat.student.participant||'-';box.append(no,participant);box.setAttribute('aria-label','Kursi '+seat.no+', nomor peserta '+(seat.student.participant||'kosong'));return box;
+     }
+     function textBlock(text){const div=document.createElement('div');div.className='denah-meta-item';div.textContent=text;return div}
+    function participantRange(students){const ids=students.map(s=>s.participant).filter(Boolean);return students.length+' siswa'+(ids.length?' · No. Peserta '+ids[0]+'–'+ids[ids.length-1]:' · nomor peserta belum diisi')}
+    function saveSettings(printNow){
+      $('message').className='';$('message').textContent='Menyimpan pengaturan…';$('printButton').disabled=true;
+      google.script.run.withSuccessHandler(()=>{
+        $('message').className='success';$('message').textContent='Pengaturan denah tersimpan di CONFIG.';renderPrintArea();renderAll();
+        if(printNow){if($('printButton').disabled){$('message').className='error';$('message').textContent='Perbaiki peringatan kapasitas atau data sebelum mencetak.';return}window.print()}
+      }).withFailureHandler(error=>{showError(error);renderAll()}).simpanPengaturanDenah({pattern,direction,preset:$('preset').value});
+    }
+    function renderPrintArea(){
+      const d=dimensions(),scope=$('printScope').value,selected=Number($('roomSelect').value);const rooms=scope==='selected'?data.rooms.filter(room=>room.number===selected):data.rooms;
+       const area=$('printArea');const pages=rooms.map(room=>buildRoom(room,d,true));pages.forEach((page,index)=>page.classList.toggle('last',index===pages.length-1));area.replaceChildren(...pages);
+    }
+    function showError(error){$('message').className='error';$('message').textContent=error.message||String(error)}
+    window.onafterprint=()=>{$('message').textContent='Pratinjau cetak ditutup.'};
+    load();
+  </script>
+</body>
+</html>

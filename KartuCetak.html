@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <style>
+    :root{font-family:Inter,Arial,sans-serif;color:#202124;font-size:14px;--blue:#1a56c4}*{box-sizing:border-box}body{margin:0;background:#fff}
+    .top{height:58px;background:#f8f9fb;border-bottom:1px solid #e0e3e7;display:flex;align-items:center;padding:0 24px;font-size:16px;font-weight:600}
+    main{padding:16px 22px 20px}.steps{display:flex;gap:7px;margin-bottom:16px;overflow:auto}.step{white-space:nowrap;padding:7px 12px;border-radius:18px;background:#f1f3f4;color:#5f6368}.step.active{background:var(--blue);color:#fff}
+    h1{font-size:21px;margin:0 0 6px}p{line-height:1.5;color:#5f6368;margin:0 0 12px}
+    .controls{display:flex;flex-wrap:wrap;gap:12px 18px;align-items:end;padding:13px 15px;border:1px solid #e0e3e7;border-radius:9px;background:#fff}
+    .docs{display:flex;flex-wrap:wrap;gap:10px 16px;font-weight:600}.docs label{display:flex;align-items:center;gap:7px;cursor:pointer;font-weight:500}.docs input{width:16px;height:16px;accent-color:var(--blue)}
+     .field{display:grid;gap:5px;font-weight:600;font-size:12px}.field select,.field input{height:38px;padding:0 9px;border:1px solid #c4c7cc;border-radius:6px;font:inherit;background:#fff}.field input[type=number]{width:78px}.field input[type=text]{width:170px}.signature-status{align-self:center;color:#5f6368;font-size:12px;font-weight:400}
+    .canvas-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:14px 0 10px;flex-wrap:wrap}.canvas-head h2{font-size:15px;margin:0}.canvas-head span{color:#5f6368;font-size:13px}
+    .canvas{background:#e8eaed;border-radius:9px;padding:16px;max-height:520px;overflow:auto}
+    #pages{zoom:.5;display:flex;flex-direction:column;align-items:center;gap:14px}
+    .page-label{font-family:Inter,Arial,sans-serif;font-size:18px;color:#5f6368;margin-bottom:4px}
+     .pdf{box-sizing:border-box;width:215.9mm;height:355.6mm;padding:10mm;background:#fff;box-shadow:0 1px 6px rgba(0,0,0,.28);font-family:Arial,sans-serif;color:#111;page-break-after:always;break-after:page;overflow:hidden}
+     .sheet{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));gap:6mm;height:100%;align-content:stretch}
+     .card{height:auto;min-height:0;border:.5mm solid #333;border-radius:1.5mm;padding:5mm 5mm 4mm;display:flex;flex-direction:column;overflow:hidden;background:#fff}
+    .card.blank-cell{border:0}
+     .card-head{display:flex;align-items:center;justify-content:center;gap:3mm;padding-bottom:2.5mm;border-bottom:.3mm solid #333;margin-bottom:3.5mm;text-align:center}
+     .card-logo{width:14mm;height:14mm;object-fit:contain;flex:none}
+     .card-title{font-size:12pt;font-weight:700;letter-spacing:normal;line-height:1.15}
+     .card-exam{font-size:8.5pt;font-weight:700;margin-top:.6mm;text-transform:uppercase;line-height:1.2;letter-spacing:normal}
+     .card-year{font-size:8.5pt;line-height:1.2}
+     .card-school{font-size:9pt;font-weight:700;margin-top:.6mm;line-height:1.2}
+     .card-fields{margin-top:0;display:grid;row-gap:1.8mm;font-size:10pt}
+     .card-row{display:grid;grid-template-columns:24mm 3mm minmax(0,1fr);align-items:baseline}
+     .card-label{min-width:0}.card-colon{text-align:left}.card-value{min-width:0;font-weight:600;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.2}.card-value.empty{min-height:4mm}
+     .card-cadangan .card-value.empty{border-bottom:.3mm solid #333}
+    .kursi-box{margin:1.5mm 0 0;border:.4mm solid var(--blue);background:#eef3fd;border-radius:1mm;padding:1.5mm;text-align:center;font-size:12pt;font-weight:700;color:var(--blue);letter-spacing:.03em}
+     .card-sign{margin-top:auto;display:flex;justify-content:space-between;gap:4mm;font-size:8.5pt;line-height:1.3;padding-top:3mm;text-align:center}
+     .card-sign div{width:48%;min-width:0;max-width:none}.card-sign.single-sign>div{width:100%}
+    .card-sign .left{text-align:left}.card-sign .right{text-align:center;margin-left:auto}
+     .sign-space{height:13mm}
+     .sign-name{font-weight:700}.sign-image{display:block;width:42mm;height:13mm;object-fit:contain;margin:0 auto}.card-sign .left .sign-image{margin-left:0}
+    .footer{display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-top:14px}
+    button{min-height:42px;padding:0 16px;border:0;border-radius:6px;background:var(--blue);color:#fff;font:inherit;font-weight:600;cursor:pointer}
+    button.secondary{border:1px solid #c4c7cc;background:#fff;color:#202124}
+    button:disabled{opacity:.5;cursor:not-allowed}
+    #message{min-height:20px;margin-right:auto;color:#5f6368}#message.error{color:#9b1c1c}#message.success{color:#137333}
+    @page{size:215.9mm 355.6mm;margin:0}
+    @media print{
+      body{background:#fff}
+      .top,.controls,.canvas-head,.footer,#message,.steps{display:none!important}
+      main{padding:0}
+      .canvas{background:none;padding:0;max-height:none;overflow:visible;border-radius:0}
+      #pages{zoom:1;display:block}
+      .page-label{display:none}
+      .pdf{box-shadow:none;margin:0}
+      #pages > div:last-child .pdf{page-break-after:auto;break-after:auto}
+    }
+    @media(max-width:680px){main{padding:14px 12px}.controls{gap:10px}.field input[type=text]{width:140px}}
+  </style>
+</head>
+<body>
+  <header class="top">Administrasi Ujian · Kartu Peserta</header>
+  <main>
+    <nav class="steps" aria-label="Tahapan aplikasi"><span class="step">Mulai</span><span class="step">Input Siswa</span><span class="step">Bagi Ruang</span><span class="step">Pola Kursi</span><span class="step active">Cetak</span></nav>
+    <h1>Kartu peserta</h1>
+    <p>Centang kartu yang ingin dicetak, pilih ruang bila perlu, lalu cetak atau simpan sebagai PDF. Ukuran kertas F4, enam kartu per halaman.</p>
+    <section class="controls" aria-label="Pengaturan cetak kartu">
+      <div class="docs">
+        <label><input type="checkbox" id="docUjian" checked onchange="rebuild()"> Kartu Ujian</label>
+        <label><input type="checkbox" id="docSementara" onchange="rebuild()"> Kartu Sementara</label>
+        <label><input type="checkbox" id="docCadangan" onchange="rebuild();toggleBackup()"> Kartu Cadangan</label>
+        <label><input type="checkbox" id="docMeja" onchange="rebuild()"> Kartu Meja</label>
+      </div>
+      <label class="field">Halaman cadangan<input id="backupPages" type="number" min="0" max="20" step="1" value="2" disabled onchange="rebuild()"></label>
+      <label class="field">Ruang<select id="roomScope" onchange="rebuild()"><option value="all">Semua ruang</option></select></label>
+       <label class="field">Tanggal cetak<input id="printDate" type="text" placeholder="20 April 2026" onchange="rebuild()"></label>
+       <label class="field">TTD Kepala Sekolah<input id="headSignature" type="file" accept="image/png,image/jpeg,image/webp" onchange="saveSignature(this)"></label><span id="signatureStatus" class="signature-status"></span>
+      <label class="field">Perbesaran<select id="zoom" onchange="setZoom()"><option value="0.4">40%</option><option value="0.5" selected>50%</option><option value="0.75">75%</option><option value="1">100%</option></select></label>
+    </section>
+    <div class="canvas-head"><h2>Pratinjau</h2><span id="pageInfo"></span></div>
+    <div class="canvas"><div id="pages"></div></div>
+    <div class="footer">
+      <span id="message" aria-live="polite"></span>
+      <button class="secondary" onclick="rebuild()">Perbarui pratinjau</button>
+      <button id="printButton" onclick="printCards()">Cetak / Simpan PDF</button>
+    </div>
+  </main>
+  <script>
+    const BULAN=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+    let data=null;
+    const $=id=>document.getElementById(id);
+    function load(){
+      $('pageInfo').textContent='Memuat data…';
+      google.script.run.withSuccessHandler(result=>{
+        if(!result.valid){$('pageInfo').textContent='';showError({message:result.message||'Data kartu belum tersedia.'});return}
+        data=result;
+         $('printDate').value=result.config.printDate||today();$('signatureStatus').textContent=result.config.headSignatureDataUri?'TTD tersimpan.':'Belum ada TTD.';
+        $('backupPages').value=String(result.config.backupPages);
+        const select=$('roomScope');
+        result.rooms.forEach(room=>{const option=document.createElement('option');option.value=String(room.number);option.textContent='Ruang '+String(room.number).padStart(3,'0');select.append(option)});
+        toggleBackup();rebuild();
+      }).withFailureHandler(showError).getDataKartu();
+    }
+    function today(){const now=new Date();return now.getDate()+' '+BULAN[now.getMonth()]+' '+now.getFullYear()}
+    function saveSignature(input){const file=input.files[0];if(!file)return;if(!/^image\/(png|jpeg|webp)$/.test(file.type)){showError({message:'Pilih file gambar PNG, JPG, atau WebP.'});input.value='';return}const reader=new FileReader();reader.onload=()=>{const image=new Image();image.onload=()=>{const scale=Math.min(1,1000/image.width,400/image.height),canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(image.width*scale));canvas.height=Math.max(1,Math.round(image.height*scale));const context=canvas.getContext('2d');context.fillStyle='#fff';context.fillRect(0,0,canvas.width,canvas.height);context.drawImage(image,0,0,canvas.width,canvas.height);const dataUri=canvas.toDataURL('image/jpeg',.82);if(dataUri.length>50000){showError({message:'Ukuran gambar masih terlalu besar. Gunakan scan tanda tangan yang lebih kecil.'});return}$('signatureStatus').textContent='Menyimpan TTD…';google.script.run.withSuccessHandler(()=>{data.config.headSignatureDataUri=dataUri;$('signatureStatus').textContent='TTD tersimpan.';rebuild()}).withFailureHandler(showError).simpanTandaTanganKepala(dataUri)};image.onerror=()=>showError({message:'Gambar tanda tangan tidak dapat dibaca.'});image.src=reader.result};reader.readAsDataURL(file)}
+    function toggleBackup(){$('backupPages').disabled=!$('docCadangan').checked}
+    function selectedKinds(){return ['ujian','sementara','meja'].filter(kind=>$('doc'+kind.charAt(0).toUpperCase()+kind.slice(1)).checked)}
+    function cardHeadTitle(kind){return {ujian:'KARTU TANDA PESERTA',sementara:'NOMOR SEMENTARA',cadangan:'KARTU CADANGAN',meja:'NOMOR MEJA PESERTA'}[kind]}
+    function makeCard(kind,student){
+       const card=document.createElement('article');card.className='card card-'+kind;
+      const head=document.createElement('div');head.className='card-head';
+      if(data.config.logoDataUri){const logo=document.createElement('img');logo.className='card-logo';logo.src=data.config.logoDataUri;logo.alt='Logo sekolah';head.append(logo)}
+      const text=document.createElement('div');
+      const title=document.createElement('div');title.className='card-title';title.textContent=cardHeadTitle(kind);
+      const exam=document.createElement('div');exam.className='card-exam';exam.textContent=data.config.exam;
+      const year=document.createElement('div');year.className='card-year';year.textContent='Tahun Pelajaran '+data.config.year;
+      const school=document.createElement('div');school.className='card-school';school.textContent=data.config.school;
+      if(kind==='ujian'){text.append(title,exam,year,school)}else{exam.textContent=data.config.exam+' '+data.config.year;text.append(title,exam,school)}
+      head.append(text);card.append(head);
+       const studentRoom=student&&student.room!==''?String(student.room).padStart(3,'0'):'';
+      if(kind==='meja'&&student){
+        card.append(fieldRows([['Nama',student.name],['No. Peserta',student.participant],['Kelas / Ruang',student.className+' / '+studentRoom]]));
+        const box=document.createElement('div');box.className='kursi-box';box.textContent='KURSI '+student.order;card.append(box);
+      }else if(kind==='ujian'&&student){
+        card.append(fieldRows([['No. Induk',student.induk],['Nama',student.name],['No. Peserta',student.participant],['Kelas',student.className],['Ruang',studentRoom]]));
+      }else if(kind==='sementara'&&student){
+        card.append(fieldRows([['Nama',student.name],['No. Peserta',student.participant],['Kelas',student.className],['Ruang',studentRoom]]));
+      }else{
+        card.append(fieldRows([['Nama',''],['No. Peserta',''],['Kelas',''],['Ruang','']]));
+      }
+      card.append(signBlock(kind));return card;
+    }
+    function fieldRows(rows){
+      const wrap=document.createElement('div');wrap.className='card-fields';
+       rows.forEach(([label,value])=>{const row=document.createElement('div');row.className='card-row';const name=document.createElement('span');name.className='card-label';name.textContent=label;const colon=document.createElement('span');colon.className='card-colon';colon.textContent=':';const val=document.createElement('span');val.className='card-value'+(value?'':' empty');val.textContent=value||'';row.append(name,colon,val);wrap.append(row)});
+      return wrap;
+    }
+    function signBlock(kind){
+       const wrap=document.createElement('div');wrap.className='card-sign single-sign';
+      const panitia=()=>{const box=document.createElement('div');box.className='left';const role=document.createElement('div');role.textContent='Panitia';const space=document.createElement('div');space.className='sign-space';const line=document.createElement('div');line.textContent='( . . . . . . . )';box.append(role,space,line);return box};
+       const signatureImage=()=>{if(!data.config.headSignatureDataUri)return null;const image=document.createElement('img');image.className='sign-image';image.src=data.config.headSignatureDataUri;image.alt='Tanda tangan '+(data.config.headName||'Kepala Sekolah');return image};
+       const kepala=()=>{const box=document.createElement('div');box.className='right';const role=document.createElement('div');role.textContent=data.config.headTitle||'Kepala Sekolah';const space=document.createElement('div');space.className='sign-space';const name=document.createElement('div');name.className='sign-name';name.textContent=data.config.headName||'( . . . . . . . )';box.append(role);const image=signatureImage();box.append(image||space,name);if(data.config.headNip){const nip=document.createElement('div');nip.textContent='NIP. '+data.config.headNip;box.append(nip)}return box};
+      if(kind==='ujian'){
+         const left=document.createElement('div');left.className='left';const pre=document.createElement('div');pre.textContent='Mengetahui,';const role=document.createElement('div');role.textContent=data.config.headTitle||'Kepala Sekolah';const space=document.createElement('div');space.className='sign-space';const name=document.createElement('div');name.className='sign-name';name.textContent=data.config.headName||'( . . . . . . . )';left.append(pre,role);const image=signatureImage();left.append(image||space,name);if(data.config.headNip){const nip=document.createElement('div');nip.textContent='NIP. '+data.config.headNip;left.append(nip)}
+         wrap.append(left);
+       }else if(kind==='meja'){wrap.append(kepala())}
+       else if(kind==='cadangan'){wrap.append(panitia())}
+       else{wrap.append(kepala())}
+      return wrap;
+    }
+    function rebuild(){
+      if(!data)return;
+      const kinds=selectedKinds(),blank=$('docCadangan').checked,rooms=data.rooms.filter(room=>$('roomScope').value==='all'||String(room.number)===$('roomScope').value);
+      const students=[];rooms.forEach(room=>room.students.forEach(student=>students.push(Object.assign({},student,{room:room.number}))));
+      const pagesEl=$('pages');pagesEl.textContent='';
+      const totalCards=students.length*kinds.length;
+      if(!totalCards&&!blank){$('pageInfo').textContent='Tidak ada kartu yang dipilih.';$('printButton').disabled=true;return}
+      let cards=[];
+      if(totalCards){students.forEach(student=>kinds.forEach(kind=>cards.push(makeCard(kind,student))))}
+      const dataPages=[];for(let i=0;i<cards.length;i+=6)dataPages.push(cards.slice(i,i+6));
+      const blankPages=blank?Math.max(0,Number($('backupPages').value)||0):0;
+      const allPages=dataPages.map((page,index)=>({page,label:'Halaman '+(index+1)}));
+      for(let i=0;i<blankPages;i++)allPages.push({page:[],label:'Kartu cadangan '+(i+1),blank:true});
+      allPages.forEach((entry,index)=>{
+        const wrapper=document.createElement('div');
+        const label=document.createElement('div');label.className='page-label';label.textContent=entry.label;
+        const page=document.createElement('section');page.className='pdf';const sheet=document.createElement('div');sheet.className='sheet';
+        const items=entry.page.slice();
+        if(entry.blank)for(let i=0;i<6;i++)items.push(makeCard('cadangan',null));
+        while(items.length&&items.length%6)items.push(null);
+        items.forEach(card=>{if(card)sheet.append(card);else{const filler=document.createElement('div');filler.className='card blank-cell';sheet.append(filler)}});
+        page.append(sheet);wrapper.append(label,page);pagesEl.append(wrapper);
+      });
+      const pageWords=allPages.length===1?'1 halaman':allPages.length+' halaman';
+      const name=$('roomScope').value==='all'?'Semua ruang':'Ruang '+String($('roomScope').value).padStart(3,'0');
+      $('pageInfo').textContent=name+' · '+pageWords+' · F4 (21,6 × 35,6 cm)';
+      $('printButton').disabled=!allPages.length;
+      setZoom();
+    }
+    function setZoom(){$('pages').style.zoom=$('zoom').value}
+    function printCards(){
+      if(!$('pages').children.length){showError({message:'Belum ada halaman untuk dicetak.'});return}
+      const message=$('message');message.className='';message.textContent='';
+      window.print();
+    }
+    function showError(error){const message=$('message');message.className='error';message.textContent=error.message||String(error)}
+    window.onafterprint=()=>{const message=$('message');message.className='success';message.textContent='Dialog cetak ditutup. Pilih "Simpan sebagai PDF" untuk menyimpan berkas.'};
+    load();
+  </script>
+</body>
+</html>
