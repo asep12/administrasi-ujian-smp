@@ -31,7 +31,7 @@
      .card-cadangan .card-value.empty{border-bottom:.3mm solid #333}
     .kursi-box{margin:1.5mm 0 0;border:.4mm solid var(--blue);background:#eef3fd;border-radius:1mm;padding:1.5mm;text-align:center;font-size:12pt;font-weight:700;color:var(--blue);letter-spacing:.03em}
      .card-sign{margin-top:auto;display:flex;justify-content:space-between;gap:4mm;font-size:8.5pt;line-height:1.3;padding-top:3mm;text-align:center}
-     .card-sign div{width:48%;min-width:0;max-width:none}.card-sign.single-sign>div{width:100%}
+     .card-sign>div{width:48%;min-width:0;max-width:none}.card-sign.single-sign>div{width:100%}
     .card-sign .left{text-align:left}.card-sign .right{text-align:center;margin-left:auto}
      .sign-space{height:13mm}
      .sign-name{font-weight:700}.sign-image{display:block;width:42mm;height:13mm;object-fit:contain;margin:0 auto}.card-sign .left .sign-image{margin-left:0}
@@ -137,7 +137,7 @@
        const wrap=document.createElement('div');wrap.className='card-sign single-sign';
       const panitia=()=>{const box=document.createElement('div');box.className='left';const role=document.createElement('div');role.textContent='Panitia';const space=document.createElement('div');space.className='sign-space';const line=document.createElement('div');line.textContent='( . . . . . . . )';box.append(role,space,line);return box};
        const signatureImage=()=>{if(!data.config.headSignatureDataUri)return null;const image=document.createElement('img');image.className='sign-image';image.src=data.config.headSignatureDataUri;image.alt='Tanda tangan '+(data.config.headName||'Kepala Sekolah');return image};
-       const kepala=()=>{const box=document.createElement('div');box.className='right';const role=document.createElement('div');role.textContent=data.config.headTitle||'Kepala Sekolah';const space=document.createElement('div');space.className='sign-space';const name=document.createElement('div');name.className='sign-name';name.textContent=data.config.headName||'( . . . . . . . )';box.append(role);const image=signatureImage();box.append(image||space,name);if(data.config.headNip){const nip=document.createElement('div');nip.textContent='NIP. '+data.config.headNip;box.append(nip)}return box};
+       const kepala=()=>{const box=document.createElement('div');box.className='left';const role=document.createElement('div');role.textContent=data.config.headTitle||'Kepala Sekolah';const space=document.createElement('div');space.className='sign-space';const name=document.createElement('div');name.className='sign-name';name.textContent=data.config.headName||'( . . . . . . . )';box.append(role);const image=signatureImage();box.append(image||space,name);if(data.config.headNip){const nip=document.createElement('div');nip.textContent='NIP. '+data.config.headNip;box.append(nip)}return box};
       if(kind==='ujian'){
          const left=document.createElement('div');left.className='left';const pre=document.createElement('div');pre.textContent='Mengetahui,';const role=document.createElement('div');role.textContent=data.config.headTitle||'Kepala Sekolah';const space=document.createElement('div');space.className='sign-space';const name=document.createElement('div');name.className='sign-name';name.textContent=data.config.headName||'( . . . . . . . )';left.append(pre,role);const image=signatureImage();left.append(image||space,name);if(data.config.headNip){const nip=document.createElement('div');nip.textContent='NIP. '+data.config.headNip;left.append(nip)}
          wrap.append(left);
