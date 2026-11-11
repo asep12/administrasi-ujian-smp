@@ -7,6 +7,7 @@ function onOpen() {
     .addItem('Pembagian ruang', 'bukaPembagianRuang')
     .addItem('Pola kursi & denah', 'bukaPolaKursi')
     .addItem('Kartu peserta', 'bukaKartu')
+    .addItem('Daftar peserta', 'bukaDaftarPeserta')
     .addItem('Daftar hadir', 'bukaDaftarHadir')
     .addItem('Cetak terpadu', 'bukaCetakTerpadu')
     .addToUi();
@@ -38,6 +39,13 @@ function bukaKartu() {
     .setWidth(1040)
     .setHeight(800);
   SpreadsheetApp.getUi().showModalDialog(html, 'Kartu Peserta');
+}
+
+function bukaDaftarPeserta() {
+  const html = HtmlService.createHtmlOutputFromFile('DaftarPeserta')
+    .setWidth(900)
+    .setHeight(800);
+  SpreadsheetApp.getUi().showModalDialog(html, 'Daftar Peserta');
 }
 
 function bukaDaftarHadir() {

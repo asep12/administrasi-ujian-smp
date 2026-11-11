@@ -1,3 +1,7 @@
+function getDataDaftarPeserta() {
+  return getDataDaftarHadir();
+}
+
 function getDataDaftarHadir() {
   try {
     const data = getDataDenah();

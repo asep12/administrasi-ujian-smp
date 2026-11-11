@@ -6,6 +6,7 @@ Template Google Apps Script untuk administrasi ujian sekolah:
 - pembagian ruang;
 - denah tempat duduk dengan empat pola;
 - kartu peserta dan kartu cadangan;
+- daftar peserta per ruangan;
 - daftar hadir per mata pelajaran.
 
 ## Menjalankan
